@@ -1,0 +1,42 @@
+module(
+    name = "rules_hugo_rmcguinness",
+    version = "0.2.0",
+)
+
+# Load the module extension for Hugo dependencies
+hugo_deps = use_extension("//hugo:extensions.bzl", "hugo_deps")
+
+# Configure Hugo repository
+hugo_deps.hugo_repository(
+    name = "hugo",
+    extended = True,
+    version = "0.148.1",
+)
+
+# Configure Hugo themes
+hugo_deps.http_archive(
+    name = "hugo_theme_book",
+    build_file_content = """
+filegroup(
+    name = "files",
+    srcs = glob(["**"]),
+    visibility = ["//visibility:public"]
+)
+        """,
+    sha256 = "adf41c4282974dc7b42aa28762e34b704a0aad4ec8d648eb425484dbdfbbefc8",
+    strip_prefix = "hugo-book-11.0.0",
+    url = "https://github.com/alex-shpak/hugo-book/archive/refs/tags/v11.0.0.zip",
+)
+hugo_deps.http_archive(
+    name = "hugo_theme_geekdoc",
+    build_file_content = """
+filegroup(
+    name = "files",
+    srcs = glob(["**"]),
+    visibility = ["//visibility:public"]
+)
+    """,
+    sha256 = "c8bfeb30f3a743afa5adbad9b7c19bd99de3e5e0f9ad5875b799dea54d79013d",
+    url = "https://github.com/thegeeklab/hugo-geekdoc/releases/download/v1.5.1/hugo-geekdoc.tar.gz",
+)
+use_repo(hugo_deps, "hugo", "hugo_theme_book", "hugo_theme_geekdoc")
