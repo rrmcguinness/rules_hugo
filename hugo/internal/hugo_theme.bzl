@@ -1,16 +1,24 @@
+HugoThemeInfo = provider(
+    "Information about a Hugo theme",
+    fields = {
+        "name": "Theme name",
+        "path": "Theme path",
+        "files": "Theme files",
+    },
+)
+
 def _hugo_theme_impl(ctx):
-    return struct(
-        hugo_theme = struct(
+    return [
+        HugoThemeInfo(
             name = ctx.attr.theme_name or ctx.label.name,
             path = ctx.label.package,
             files = depset(ctx.files.srcs),
         ),
-    )
+    ]
 
 hugo_theme = rule(
     attrs = {
-        "theme_name": attr.string(
-        ),
+        "theme_name": attr.string(),
         "srcs": attr.label_list(
             mandatory = True,
             allow_files = True,

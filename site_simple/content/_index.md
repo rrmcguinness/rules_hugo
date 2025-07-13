@@ -15,7 +15,7 @@ type: docs
 
 ## Add Workspace Dependencies
 
-Declare a dependency on `build_stack_rules_hugo` in your `WORKSPACE`:
+Declare a dependency on `rules_hugo_rmcguinness` in your `WORKSPACE`:
 
 ```python
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
@@ -31,7 +31,7 @@ http_archive(
 Declare a dependency on the hugo binary as well as a theme in your `WORKSPACE`:
 
 ```python
-load("@build_stack_rules_hugo//hugo:rules.bzl", "github_hugo_theme", "hugo_repository")
+load("@rules_hugo_rmcguinness//hugo:rules.bzl", "github_hugo_theme", "hugo_repository")
 
 hugo_repository(
     name = "hugo",
@@ -67,7 +67,7 @@ $ touch site/BUILD.bazel
 Having the following rules:
 
 ```python
-load("@build_stack_rules_hugo//hugo:rules.bzl", "hugo_site", "hugo_theme")
+load("@rules_hugo_rmcguinness//hugo:rules.bzl", "hugo_site", "hugo_theme")
 
 hugo_theme(
     name = "book",

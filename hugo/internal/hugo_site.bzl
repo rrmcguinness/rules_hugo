@@ -1,3 +1,5 @@
+load("//hugo:internal/hugo_theme.bzl", "HugoThemeInfo")
+
 def relative_path(src, dirname):
     """Given a src File and a directory it's under, return the relative path.
 
@@ -53,7 +55,7 @@ def _hugo_site_impl(ctx):
 
     if config_dir == None or len(config_dir) == 0:
         config_file = ctx.actions.declare_file(ctx.file.config.basename)
-        
+
         ctx.actions.run_shell(
             inputs = [ctx.file.config],
             outputs = [config_file],
@@ -69,11 +71,13 @@ def _hugo_site_impl(ctx):
         ]
     else:
         placeholder_file = ctx.actions.declare_file(".placeholder")
-        ctx.actions.write(placeholder_file, "paceholder", is_executable=False)
+        ctx.actions.write(placeholder_file, "paceholder", is_executable = False)
         hugo_inputs.append(placeholder_file)
+
         #  placeholder_file.dirname + "/config/_default/config.yaml",
         hugo_args += [
-            "--source", placeholder_file.dirname
+            "--source",
+            placeholder_file.dirname,
         ]
 
     # Copy all the files over
@@ -92,17 +96,61 @@ def _hugo_site_impl(ctx):
 
     # Copy the theme
     if ctx.attr.theme:
-        theme = ctx.attr.theme.hugo_theme
+        theme = ctx.attr.theme[HugoThemeInfo]
         hugo_args += ["--theme", theme.name]
         for i in theme.files.to_list():
             path_list = i.short_path.split("/")
             if i.short_path.startswith("../"):
-                o_filename = "/".join(["themes", theme.name] + path_list[2:])
-            elif i.short_path[len(theme.path):].startswith("/themes"): # check if themes is the first dir after theme path
+                # Handle theme files from external repositories with directory prefixes
+                theme_content_dirs = ["layouts", "assets", "static", "i18n", "archetypes", "images"]
+
+                # Skip exampleSite files as they are just examples, not actual theme files
+                if "exampleSite" in path_list:
+                    continue
+
+                # Check if this is a theme content file
+                is_theme_content = False
+                content_idx = -1
+
+                for idx, part in enumerate(path_list):
+                    if part in theme_content_dirs:
+                        content_idx = idx
+                        is_theme_content = True
+                        break
+
+                # If it's not theme content (like BUILD.bazel, WORKSPACE, etc.), skip it
+                if not is_theme_content:
+                    continue
+
+                # Extract the relative path from the theme content directory onwards
+                relative_path = "/".join(path_list[content_idx:])
+                o_filename = "/".join(["themes", theme.name, relative_path])
+            elif i.short_path[len(theme.path):].startswith("/themes"):  # check if themes is the first dir after theme path
                 indx = path_list.index("themes")
-                o_filename = "/".join(["themes", theme.name] + path_list[indx+2:])
+                o_filename = "/".join(["themes", theme.name] + path_list[indx + 2:])
             else:
-                o_filename = "/".join(["themes", theme.name, i.short_path[len(theme.path):]])
+                # Handle theme files that are in external repositories with directory prefixes
+                # Find the first directory that contains theme-like content (layouts, assets, etc.)
+                theme_content_dirs = ["layouts", "assets", "static", "i18n", "archetypes", "images"]
+                parts = i.short_path.split("/")
+
+                # Check if this is a theme content file
+                is_theme_content = False
+                content_idx = -1
+
+                for idx, part in enumerate(parts):
+                    if part in theme_content_dirs:
+                        content_idx = idx
+                        is_theme_content = True
+                        break
+
+                # If it's not theme content (like BUILD.bazel, WORKSPACE, etc.), skip it
+                if not is_theme_content:
+                    continue
+
+                # Extract the relative path from the theme content directory onwards
+                relative_path = "/".join(parts[content_idx:])
+                o_filename = "/".join(["themes", theme.name, relative_path])
             o = ctx.actions.declare_file(o_filename)
             ctx.actions.run_shell(
                 inputs = [i],
@@ -121,7 +169,7 @@ def _hugo_site_impl(ctx):
     if ctx.attr.quiet:
         hugo_args.append("--quiet")
     if ctx.attr.verbose:
-        hugo_args.append("--verbose")
+        hugo_args += ["--logLevel", "debug"]
     if ctx.attr.base_url:
         hugo_args += ["--baseURL", ctx.attr.base_url]
     if ctx.attr.build_drafts:
@@ -137,7 +185,7 @@ def _hugo_site_impl(ctx):
         tools = [hugo],
         execution_requirements = {
             "no-sandbox": "1",
-        }, 
+        },
     )
 
     files = depset([hugo_outputdir])
@@ -195,7 +243,7 @@ hugo_site = rule(
         # Files to be included in the i18n/ subdir
         "i18n": attr.label_list(
             allow_files = True,
-        ),        
+        ),
         # The hugo executable
         "hugo": attr.label(
             default = "@hugo//:hugo",
@@ -206,7 +254,7 @@ hugo_site = rule(
         # Optionally set the base_url as a hugo argument
         "base_url": attr.string(),
         "theme": attr.label(
-            providers = ["hugo_theme"],
+            providers = [HugoThemeInfo],
         ),
         # Emit quietly
         "quiet": attr.bool(
@@ -245,38 +293,36 @@ def _hugo_serve_impl(ctx):
     if ctx.attr.quiet:
         hugo_args.append("--quiet")
     if ctx.attr.quiet:
-        hugo_args.append("--verbose")
+        hugo_args += ["--logLevel", "debug"]
     if ctx.attr.disable_fast_render:
         hugo_args.append("--disableFastRender")
 
     executable_path = "./" + ctx.attr.hugo.files_to_run.executable.short_path
 
     runfiles = ctx.runfiles()
-    runfiles = runfiles.merge(ctx.runfiles(files=[ctx.attr.hugo.files_to_run.executable]))
+    runfiles = runfiles.merge(ctx.runfiles(files = [ctx.attr.hugo.files_to_run.executable]))
 
     for dep in ctx.attr.dep:
-        runfiles = runfiles.merge(dep.default_runfiles).merge(dep.data_runfiles).merge(ctx.runfiles(files=dep.files.to_list()))
-
+        runfiles = runfiles.merge(dep.default_runfiles).merge(dep.data_runfiles).merge(ctx.runfiles(files = dep.files.to_list()))
 
     script = ctx.actions.declare_file("{}-serve".format(ctx.label.name))
     script_content = _SERVE_SCRIPT_PREFIX + _SERVE_SCRIPT_TEMPLATE.format(
-        hugo_bin=executable_path,
-        args=" ".join(hugo_args),
+        hugo_bin = executable_path,
+        args = " ".join(hugo_args),
     )
-    ctx.actions.write(output=script, content=script_content, is_executable=True)
+    ctx.actions.write(output = script, content = script_content, is_executable = True)
 
     ctx.actions.run_shell(
         mnemonic = "GoHugoServe",
         tools = [script, hugo],
         command = script.path,
         outputs = hugo_outputs,
-        execution_requirements={
+        execution_requirements = {
             "no-sandbox": "1",
         },
     )
 
-    return [DefaultInfo(executable=script, runfiles=runfiles)]
-
+    return [DefaultInfo(executable = script, runfiles = runfiles)]
 
 hugo_serve = rule(
     attrs = {
@@ -288,7 +334,7 @@ hugo_serve = rule(
             cfg = "host",
         ),
         "dep": attr.label_list(
-            mandatory=True,
+            mandatory = True,
         ),
         # Disable fast render
         "disable_fast_render": attr.bool(
