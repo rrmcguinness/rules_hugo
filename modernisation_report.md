@@ -50,10 +50,14 @@ We have successfully overhauled the `rules_hugo` repository, transitioning the b
 
 ### 8. CI/CD Orchestration and Plugins Modernisation
 * **Path**: [`.github/workflows/build.yaml`](file:///Users/rmcguinness/Projects/rrmcguinness/rules_hugo/.github/workflows/build.yaml)
+  * **Migration to `setup-bazel`**: 
+    * Completely deprecated the defunct `bazelbuild/setup-bazelisk@v3` (which runs on the deprecated Node.js 20 runtime, triggering GitHub deprecation failure warnings).
+    * Migrated straight to the modern official **`bazel-contrib/setup-bazel@0.19.0`**, which natively targets the **Node.js 24** runtime and resolves all GHA system warnings.
+  * **Build Cache Optimisation**: 
+    * Swapped the manual, fragile `actions/cache@v5` integration for `setup-bazel`'s advanced fine-grained caching engine. 
+    * Automatically mounts and monitors bazelisk version downloads (`bazelisk-cache`), disk caches (`disk-cache`), and repository dependencies (`repository-cache`) natively based on build and configuration file hashes.
   * **Upgrade Actions**:
     * `actions/checkout@v3` -> Upgraded to **`actions/checkout@v6`** (absolute latest stable release version).
-    * `actions/cache@v4` -> Upgraded to **`actions/cache@v5`** (absolute latest stable release version).
-    * `bazelbuild/setup-bazelisk@v3` -> Audited and verified to be at the latest version.
   * **Critical Triggers**: Added `master` branch explicitly alongside `main` to trigger verification runs on pushes targeting your active default branch.
   * **Assertion Execution**: Swapped the legacy compilation-only run (`bazel build //...`) with a full testing pipeline (**`bazel test //...`**), ensuring all target test cases are compiled and run on the runners.
 * **Path**: [`.github/workflows/publish.yaml`](file:///Users/rmcguinness/Projects/rrmcguinness/rules_hugo/.github/workflows/publish.yaml)
