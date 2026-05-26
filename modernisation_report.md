@@ -1,6 +1,6 @@
 # rules_hugo Modernisation Walkthrough
 
-We have successfully overhauled the `rules_hugo` repository, transitioning the build architecture to a pure, modern Bazel 8 Bzlmod configuration (100% module builds), deprecating legacy WORKSPACE files, modernising platform-specific asset mapping, introducing local macOS `.pkg` installer extraction logic, and upgrading dependencies to their latest stable releases.
+We have successfully overhauled the `rules_hugo` repository, transitioning the build architecture to a pure, modern Bazel 8 Bzlmod configuration (100% module builds), deprecating legacy WORKSPACE files, modernising platform-specific asset mapping, introducing local macOS `.pkg` installer extraction logic, upgrading dependencies to their latest stable releases, and thoroughly modernising our CI/CD pipelines (GitHub Actions and Cirrus CI).
 
 ---
 
@@ -47,6 +47,20 @@ We have successfully overhauled the `rules_hugo` repository, transitioning the b
 * Modernised documentation to reference modular Bzlmod configuration keys and patterns:
   * [`README.md`](file:///Users/rmcguinness/Projects/rrmcguinness/rules_hugo/README.md) usage blocks updated to demonstrate `MODULE.bazel` structure.
   * [`site_simple/content/_index.md`](file:///Users/rmcguinness/Projects/rrmcguinness/rules_hugo/site_simple/content/_index.md) modernised to guide users on modern module declaration setup.
+
+### 8. CI/CD Orchestration and Plugins Modernisation
+* **Path**: [`.github/workflows/build.yaml`](file:///Users/rmcguinness/Projects/rrmcguinness/rules_hugo/.github/workflows/build.yaml)
+  * **Upgrade Actions**:
+    * `actions/checkout@v3` -> Upgraded to **`actions/checkout@v6`** (absolute latest stable release version).
+    * `actions/cache@v4` -> Upgraded to **`actions/cache@v5`** (absolute latest stable release version).
+    * `bazelbuild/setup-bazelisk@v3` -> Audited and verified to be at the latest version.
+  * **Critical Triggers**: Added `master` branch explicitly alongside `main` to trigger verification runs on pushes targeting your active default branch.
+  * **Assertion Execution**: Swapped the legacy compilation-only run (`bazel build //...`) with a full testing pipeline (**`bazel test //...`**), ensuring all target test cases are compiled and run on the runners.
+* **Path**: [`.github/workflows/publish.yaml`](file:///Users/rmcguinness/Projects/rrmcguinness/rules_hugo/.github/workflows/publish.yaml)
+  * Upgraded version token for the BCR publisher block: `bazel-contrib/publish-to-bcr/...@v1` to point to the modern v1 release branch.
+* **Path**: [`.cirrus.yml`](file:///Users/rmcguinness/Projects/rrmcguinness/rules_hugo/.cirrus.yml)
+  * **Image Modernisation**: Replaced the extremely deprecated `bazel:1.1.0` Google container runtime with the modern official release: **`gcr.io/bazelbuild/bazel:8.2.1`** (aligning exactly with the project’s local target version specified in [`.bazelversion`](file:///Users/rmcguinness/Projects/rrmcguinness/rules_hugo/.bazelversion)).
+  * **Target Range**: Modified the task to test the complete repository target tree (`//...`) instead of the hardcoded legacy simple build.
 
 ---
 

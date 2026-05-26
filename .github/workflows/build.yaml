@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - master
   pull_request:
 
 jobs:
@@ -12,16 +13,16 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Bazel Setup
         uses: bazelbuild/setup-bazelisk@v3
 
       - name: Mount bazel cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: "/home/runner/.cache/bazel"
           key: bazel
 
-      - name: "Build"
-        run: bazel build //...
+      - name: "Test"
+        run: bazel test //...
