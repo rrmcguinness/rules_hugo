@@ -29,111 +29,49 @@
 
 ## Usage
 
-### Add rules_hugo to your WORKSPACE and add a theme from github
+### Add rules_hugo to your MODULE.bazel and add a theme
+
+In your `MODULE.bazel`:
 
 ```python
-# Update these to latest
-RULES_HUGO_COMMIT = "..."
-RULES_HUGO_SHA256 = "..."
+bazel_dep(name = "rules_hugo_rmcguinness", version = "0.2.0")
 
-http_archive(
-    name = "build_stack_rules_hugo",
-    url = "https://github.com/stackb/rules_hugo/archive/%s.zip" % RULES_HUGO_COMMIT,
-    sha256 = RULES_HUGO_SHA256,
-    strip_prefix = "rules_hugo-%s" % RULES_HUGO_COMMIT
-)
+hugo_deps = use_extension("@rules_hugo_rmcguinness//hugo:extensions.bzl", "hugo_deps")
 
-load("@build_stack_rules_hugo//hugo:rules.bzl", "hugo_repository", "github_hugo_theme")
-
-#
-# Load hugo binary itself
-#
-# Optionally, load a specific version of Hugo, with the 'version' argument
-hugo_repository(
+# Configure Hugo repository
+hugo_deps.hugo_repository(
     name = "hugo",
+    extended = True,
+    version = "0.162.0",
 )
 
-#
-# This makes a filegroup target "@com_github_yihui_hugo_xmin//:files"
-# available to your build files
-#
-github_hugo_theme(
-    name = "com_github_yihui_hugo_xmin",
-    owner = "yihui",
-    repo = "hugo-xmin",
-    commit = "c14ca049d0dd60386264ea68c91d8495809cc4c6",
-)
-
-#
-# This creates a filegroup target from a released archive from GitHub
-# this is useful when a theme uses compiled / aggregated sources NOT found
-# in a source root.
-#
-http_archive(
-    name = "com_github_thegeeklab_hugo_geekdoc",
-    url = "https://github.com/thegeeklab/hugo-geekdoc/releases/download/v0.34.2/hugo-geekdoc.tar.gz",
-    sha256 = "7fdd57f7d4450325a778629021c0fff5531dc8475de6c4ec70ab07e9484d400e",
-    build_file_content="""
+# Load a theme from GitHub release archive
+hugo_deps.http_archive(
+    name = "hugo_theme_geekdoc",
+    build_file_content = """
 filegroup(
     name = "files",
     srcs = glob(["**"]),
     visibility = ["//visibility:public"]
 )
-    """
+    """,
+    sha256 = "d53aca4bbcad45770b0b1e7bc03253b7b824270536578f2028966f68ba3a98d1",
+    url = "https://github.com/thegeeklab/hugo-geekdoc/releases/download/v4.1.1/hugo-geekdoc.tar.gz",
 )
+
+use_repo(hugo_deps, "hugo", "hugo_theme_geekdoc")
 ```
 
-### Declare a hugo_site with a GitHub repository theme in your BUILD file
+### Declare a hugo_site with a theme in your BUILD file
 
 ```python
-load("@build_stack_rules_hugo//hugo:rules.bzl", "hugo_site", "hugo_theme", "hugo_serve")
-
-# Declare a theme 'xmin'.  In this case the `name` and
-# `theme_name` are identical, so the `theme_name` could be omitted in this case.
-hugo_theme(
-    name = "xmin",
-    theme_name = "xmin",
-    srcs = [
-        "@com_github_yihui_hugo_xmin//:files",
-    ],
-)
-
-# Declare a site. Config file is required.
-my_site_name = "basic"
-
-hugo_site(
-    name = my_site_name,
-    config = "config.toml",
-    content = [
-        "_index.md",
-        "about.md",
-    ],
-    quiet = False,
-    theme = ":xmin",
-)
-
-# Run local development server
-hugo_serve(
-    name = "local_%s" % my_site_name,
-    dep = [":%s" % my_site_name],
-)
-
-# Tar it up
-pkg_tar(
-    name = "%s_tar" % my_site_name,
-    srcs = [":%s" % my_site_name],
-)
-```
-
-### Declare a hugo_site with a GitHub released archive theme in your BUILD file
-```python
-load("@build_stack_rules_hugo//hugo:rules.bzl", "hugo_site", "hugo_theme", "hugo_serve")
+load("@rules_hugo_rmcguinness//hugo:rules.bzl", "hugo_site", "hugo_theme", "hugo_serve")
 
 hugo_theme(
     name = "hugo_theme_geekdoc",
     theme_name = "hugo-geekdoc",
     srcs = [
-        "@com_github_thegeeklab_hugo_geekdoc//:files",
+        "@hugo_theme_geekdoc//:files",
     ],
 )
 
@@ -152,6 +90,7 @@ hugo_serve(
     name = "serve",
     dep = [":site_complex"],
 )
+```
 ```
 
 ### Previewing the site

@@ -10,7 +10,7 @@ hugo_deps = use_extension("//hugo:extensions.bzl", "hugo_deps")
 hugo_deps.hugo_repository(
     name = "hugo",
     extended = True,
-    version = "0.148.1",
+    version = "0.162.0",
 )
 
 # Configure Hugo themes
@@ -36,7 +36,7 @@ filegroup(
     visibility = ["//visibility:public"]
 )
     """,
-    sha256 = "c8bfeb30f3a743afa5adbad9b7c19bd99de3e5e0f9ad5875b799dea54d79013d",
-    url = "https://github.com/thegeeklab/hugo-geekdoc/releases/download/v1.5.1/hugo-geekdoc.tar.gz",
+    sha256 = "d53aca4bbcad45770b0b1e7bc03253b7b824270536578f2028966f68ba3a98d1",
+    url = "https://github.com/thegeeklab/hugo-geekdoc/releases/download/v4.1.1/hugo-geekdoc.tar.gz",
 )
 use_repo(hugo_deps, "hugo", "hugo_theme_book", "hugo_theme_geekdoc")

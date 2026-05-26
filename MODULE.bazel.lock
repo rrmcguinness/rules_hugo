@@ -137,8 +137,8 @@
   "moduleExtensions": {
     "//hugo:extensions.bzl%hugo_deps": {
       "general": {
-        "bzlTransitiveDigest": "1cLgWNh330gPR+VXu5Aakjzj2STyjYhnLvWiErZX+2I=",
-        "usagesDigest": "0WKIdzLPnumZnGtcwSZJ7yu/Am7l3WN6EKImSVsI518=",
+        "bzlTransitiveDigest": "fHLxa1PkaQs9vWSO3GrDPPB8EdXkItmok9HbjPQUfwY=",
+        "usagesDigest": "RGfnsjlVMS1uVRJfb2SK0jMQKOQ/4Bj0DWbjwR7/eMY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -146,7 +146,7 @@
           "hugo": {
             "repoRuleId": "@@//hugo:internal/hugo_repository.bzl%hugo_repository",
             "attributes": {
-              "version": "0.148.1",
+              "version": "0.162.0",
               "extended": true,
               "sha256": "",
               "os_arch": ""
@@ -164,8 +164,8 @@
           "hugo_theme_geekdoc": {
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
             "attributes": {
-              "url": "https://github.com/thegeeklab/hugo-geekdoc/releases/download/v1.5.1/hugo-geekdoc.tar.gz",
-              "sha256": "c8bfeb30f3a743afa5adbad9b7c19bd99de3e5e0f9ad5875b799dea54d79013d",
+              "url": "https://github.com/thegeeklab/hugo-geekdoc/releases/download/v4.1.1/hugo-geekdoc.tar.gz",
+              "sha256": "d53aca4bbcad45770b0b1e7bc03253b7b824270536578f2028966f68ba3a98d1",
               "build_file_content": "\nfilegroup(\n    name = \"files\",\n    srcs = glob([\"**\"]),\n    visibility = [\"//visibility:public\"]\n)\n    ",
               "strip_prefix": ""
             }

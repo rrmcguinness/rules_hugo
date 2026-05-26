@@ -13,6 +13,6 @@
 # limitations under the License.
 ---
 en:
-  languageName: "English"
+  label: "English"
   contentDir: "content/en"
   weight: 10

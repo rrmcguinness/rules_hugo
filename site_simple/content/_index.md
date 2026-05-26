@@ -13,37 +13,38 @@ type: docs
 <td>Hugo</td>
 </tr></table>
 
-## Add Workspace Dependencies
+## Add Module Dependencies
 
-Declare a dependency on `rules_hugo_rmcguinness` in your `WORKSPACE`:
-
-```python
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-http_archive(
-    name = "build_stack_rules_hugo",
-    urls = ["https://github.com/stackb/rules_hugo/archive/6bca4c2786a54d7d7acfa76cd51b0a6370bd91c4.tar.gz"],
-    strip_prefix = "rules_hugo-6bca4c2786a54d7d7acfa76cd51b0a6370bd91c4",
-    sha256 = "7d2fe8b2ba4e6e662c79c1503890c2eb82d5717a411bb6fd805269758da40c9a",
-)
-```
-
-Declare a dependency on the hugo binary as well as a theme in your `WORKSPACE`:
+Declare a dependency on `rules_hugo_rmcguinness` and the hugo binary as well as the theme in your `MODULE.bazel`:
 
 ```python
-load("@rules_hugo_rmcguinness//hugo:rules.bzl", "github_hugo_theme", "hugo_repository")
+bazel_dep(name = "rules_hugo_rmcguinness", version = "0.2.0")
 
-hugo_repository(
+hugo_deps = use_extension("@rules_hugo_rmcguinness//hugo:extensions.bzl", "hugo_deps")
+
+# Configure Hugo repository
+hugo_deps.hugo_repository(
     name = "hugo",
     extended = True,
+    version = "0.162.0",
 )
 
-github_hugo_theme(
-    name = "com_github_alex_shpak_hugo_book",
-    commit = "07048f7bf5097435a05c1e8b77241b0e478023c2",
-    owner = "alex-shpak",
-    repo = "hugo-book",
+# Load hugo-book theme
+hugo_deps.http_archive(
+    name = "hugo_theme_book",
+    build_file_content = """
+filegroup(
+    name = "files",
+    srcs = glob(["**"]),
+    visibility = ["//visibility:public"]
 )
+    """,
+    sha256 = "adf41c4282974dc7b42aa28762e34b704a0aad4ec8d648eb425484dbdfbbefc8",
+    strip_prefix = "hugo-book-11.0.0",
+    url = "https://github.com/alex-shpak/hugo-book/archive/refs/tags/v11.0.0.zip",
+)
+
+use_repo(hugo_deps, "hugo", "hugo_theme_book")
 ```
 
 ## Add Theme Files
@@ -52,8 +53,8 @@ Copy the site template files into your repository.  Typically themes include an
 `exampleSite`, so one way to do this is:
 
 ```sh
-$ bazel fetch @com_github_alex_shpak_hugo_book//:files
-$ cp $(bazel info output_base)/external/com_github_alex_shpak_hugo_book/exampleSite/ ./site
+$ bazel fetch @hugo_theme_book//:files
+$ cp -r $(bazel info output_base)/external/hugo_theme_book/exampleSite/ ./site
 ```
 
 ## Build Rules
@@ -72,7 +73,7 @@ load("@rules_hugo_rmcguinness//hugo:rules.bzl", "hugo_site", "hugo_theme")
 hugo_theme(
     name = "book",
     srcs = [
-        "@com_github_alex_shpak_hugo_book//:files",
+        "@hugo_theme_book//:files",
     ],
 )
 
